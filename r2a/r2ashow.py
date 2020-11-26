@@ -15,6 +15,7 @@ import base.whiteboard as whiteboard
 class R2AShow(IR2A):
     throughput = 0
     lastRequest = 0
+    throughputList = []
 
     def __init__(self, id):
         IR2A.__init__(self, id)
@@ -53,8 +54,30 @@ class R2AShow(IR2A):
         self.lastRequest = time.time()
         self.send_down(msg)
 
+    def ponderatedMean(self):
+        meanSum = 0
+        wheightsSum = 0
+        wheightIndex = 1
+        for element in self.throughputList:
+            meanSum += element * wheightIndex
+            wheightsSum += wheightIndex
+            wheightIndex *= 2
+
+        return meanSum / wheightsSum
+
     def handle_segment_size_response(self, msg):
-        self.throughput = msg.get_bit_length() / (time.time() - self.lastRequest)
+        newThroughput = msg.get_bit_length() / (time.time() - self.lastRequest)
+        self.throughputList.append(newThroughput)
+        
+        ponderated = self.ponderatedMean()
+
+        self.throughput = ponderated
+        
+        print('----------*************------------')
+        print(self.throughputList)
+        print(ponderated)
+        print(self.throughput)
+        print('----------*************------------')
         self.send_up(msg)
 
     def initialize(self):
