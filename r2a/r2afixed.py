@@ -30,12 +30,11 @@ class R2AFixed(IR2A):
         # getting qi list
         self.parsed_mpd = parse_mpd(msg.get_payload())
         self.qi = self.parsed_mpd.get_qi()
-
         self.send_up(msg)
 
     def handle_segment_size_request(self, msg):
         # time to define the segment quality choose to make the request
-        msg.add_quality_id(self.qi[19])
+        msg.add_quality_id(self.qi[0])
         self.send_down(msg)
 
     def handle_segment_size_response(self, msg):
