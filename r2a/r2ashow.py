@@ -40,12 +40,16 @@ class R2AShow(IR2A):
     def handle_segment_size_request(self, msg):
         # time to define the segment quality choose to make the request
         qiId = self.lastLessThan(self.qi, self.throughput)
-        if self.whiteboard.get_amount_video_to_play() <= 5:
+        bufferSz = self.whiteboard.get_amount_video_to_play()
+
+        if bufferSz <= 5:
             qiId = max(0, qiId - 5)
-        elif self.whiteboard.get_amount_video_to_play() <= 10:
+        elif bufferSz <= 10:
             qiId = max(0, qiId - 3)
+        else:
+            qiId = min(len(self.qi)-1, qiId + (bufferSz - 10) // 5)
+
         msg.add_quality_id(self.qi[qiId])
-        print("Throughput ------", self.throughput)
         self.lastRequest = time.time()
         self.send_down(msg)
 
