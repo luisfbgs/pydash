@@ -43,9 +43,9 @@ class R2AShow(IR2A):
         bufferSz = self.whiteboard.get_amount_video_to_play()
 
         if bufferSz <= 5:
-            qiId = max(0, qiId - 5)
+            qiId = max(0, qiId - (15 - bufferSz) // 2)
         elif bufferSz <= 10:
-            qiId = max(0, qiId - 3)
+            qiId = max(0, qiId - (13 - bufferSz) // 2)
         else:
             qiId = min(len(self.qi)-1, qiId + (bufferSz - 10) // 5)
 
