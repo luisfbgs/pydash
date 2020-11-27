@@ -15,7 +15,7 @@ import base.whiteboard as whiteboard
 class R2AShow(IR2A):
     throughput = 0
     lastRequest = 0
-    throughputList = []
+    nextThroughput = 0
 
     def __init__(self, id):
         IR2A.__init__(self, id)
@@ -40,7 +40,7 @@ class R2AShow(IR2A):
 
     def handle_segment_size_request(self, msg):
         # time to define the segment quality choose to make the request
-        qiId = self.lastLessThan(self.qi, self.throughput)
+        qiId = self.lastLessThan(self.qi, self.nextThroughput)
         bufferSz = self.whiteboard.get_amount_video_to_play()
 
         if bufferSz <= 5:
@@ -54,29 +54,15 @@ class R2AShow(IR2A):
         self.lastRequest = time.time()
         self.send_down(msg)
 
-    def ponderatedMean(self):
-        meanSum = 0
-        wheightsSum = 0
-        wheightIndex = 1
-        for element in self.throughputList:
-            meanSum += element * wheightIndex
-            wheightsSum += wheightIndex
-            wheightIndex *= 2
-
-        return meanSum / wheightsSum
-
     def handle_segment_size_response(self, msg):
         newThroughput = msg.get_bit_length() / (time.time() - self.lastRequest)
-        self.throughputList.append(newThroughput)
-        
-        ponderated = self.ponderatedMean()
+        self.nextThroughput = newThroughput - self.throughput if newThroughput < self.throughput else 0
+        self.throughput = self.throughput * 0.25 + newThroughput * 0.75
+        self.nextThroughput += self.throughput
 
-        self.throughput = ponderated
-        
         print('----------*************------------')
-        print(self.throughputList)
-        print(ponderated)
-        print(self.throughput)
+        print(newThroughput)
+        print(self.nextThroughput)
         print('----------*************------------')
         self.send_up(msg)
 
