@@ -57,7 +57,7 @@ class R2AShow(IR2A):
     def handle_segment_size_response(self, msg):
         newThroughput = msg.get_bit_length() / (time.time() - self.lastRequest)
         self.nextThroughput = newThroughput - self.throughput if newThroughput < self.throughput else 0
-        self.throughput = self.throughput * 0.25 + newThroughput * 0.75
+        self.throughput = self.throughput * 0.5 + newThroughput * 0.5
         self.nextThroughput += self.throughput
 
         print('----------*************------------')
