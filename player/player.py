@@ -136,7 +136,7 @@ class Player(SimpleModule):
             #print(f'{current_time} player acordou')
 
             #there is something to play
-            if buffer_size > 0:
+            if buffer_size >= self.playback_step:
                 #player thread is sleeping.
                 if buffer_size >= self.max_buffer_size and not self.already_downloading:
                     print(f'{current_time} Acordar Player Thread!')
