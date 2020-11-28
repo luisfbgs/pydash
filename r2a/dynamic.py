@@ -31,7 +31,7 @@ class Dynamic(IR2A):
         self.t_estimated_1 = 0
         self.delta = 0
         self.throughput = 1
-        self.ini = 0
+        self.ini = time.time()
 
     def handle_xml_request(self, msg):
         self.send_down(msg)
@@ -70,7 +70,7 @@ class Dynamic(IR2A):
         self.delta = 1/(1+euler**(-21*(p-0.2)))
 
         #Calcula o tamanho do segmento esperado
-        tmp = (0.95)*aux*bufferSz/segsize
+        tmp = (0.05)*aux*bufferSz/segsize
         print('tmp =', tmp)
 
         x = []
@@ -82,6 +82,9 @@ class Dynamic(IR2A):
 
         self.t_estimated_1 = self.t_estimated
         self.t_estimated = aux
+
+        if time.time()-self.ini < 2:
+            qiId = 0
 
         self.index += 1
         msg.add_quality_id(self.qi[qiId])
