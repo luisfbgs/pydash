@@ -14,9 +14,12 @@ In this algorithm the quality choice is always the same.
 
 from player.parser import *
 from r2a.ir2a import IR2A
-
+import logger
+import time
+import math
 
 class R2AFixed(IR2A):
+    lastRequest = 0
 
     def __init__(self, id):
         IR2A.__init__(self, id)
@@ -35,9 +38,15 @@ class R2AFixed(IR2A):
     def handle_segment_size_request(self, msg):
         # time to define the segment quality choose to make the request
         msg.add_quality_id(self.qi[0])
+        self.lastRequest = time.time()
         self.send_down(msg)
 
+    # Log in milliseconds the time took to receive a package
+    def logPackageArrivalDelta(self):
+        logger.log(f'Package response time: {math.floor(1000 * (time.time() - self.lastRequest))}')
+
     def handle_segment_size_response(self, msg):
+        self.logPackageArrivalDelta()
         self.send_up(msg)
 
     def initialize(self):
