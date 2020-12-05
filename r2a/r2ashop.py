@@ -52,13 +52,10 @@ class R2AShop(IR2A):
             qiId = 0
         else:
             for i in range(len(self.qi)):
-                if bufferSz ** (1 + (bufferSz - 10) / 100) / (segsize) > self.qi[i] / self.qi[0]:
+                if bufferSz ** (1 + (bufferSz - 10) / 100) > (1 + numpy.log(i+1)) * self.qi[i] / self.qi[0]:
                     qiId = i
                 else:
                     break
-            while qiId > 0 and self.qi[qiId] > self.throughput:
-                print('A')
-                qiId -= 1
 
         msg.add_quality_id(self.qi[qiId])
         self.lastRequest = time.time()
