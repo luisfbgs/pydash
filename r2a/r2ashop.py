@@ -14,6 +14,8 @@ import time, numpy;
 from player.parser import *
 from r2a.ir2a import IR2A
 import base.whiteboard as whiteboard
+import logger
+import math
 
 class R2AShop(IR2A):
 
@@ -61,7 +63,12 @@ class R2AShop(IR2A):
         self.lastRequest = time.time()
         self.send_down(msg)
 
+    # Log in milliseconds the time took to receive a package
+    def logPackageArrivalDelta(self):
+        logger.log(f'Package response time: {math.floor(1000 * (time.time() - self.lastRequest))}')
+
     def handle_segment_size_response(self, msg):
+        self.logPackageArrivalDelta()
         self.throughput = msg.get_bit_length() / (time.time() - self.lastRequest)
         
         self.send_up(msg)
