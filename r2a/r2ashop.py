@@ -21,6 +21,7 @@ class R2AShop(IR2A):
 
     throughput = 0
     lastRequest = 0
+    tabom = 0
 
     def __init__(self, id):
         IR2A.__init__(self, id)
@@ -38,26 +39,22 @@ class R2AShop(IR2A):
         self.qi = self.parsed_mpd.get_qi()
         self.send_up(msg)
 
-    def lastLessThan(self, vals, target):
-        for i in range(len(vals)):
-            if vals[i] >= target:
-                return max(0, i - 1)
-        return len(vals) - 1
-
     def handle_segment_size_request(self, msg):
         # time to define the segment quality choose to make the request
-        #qiId = self.lastLessThan(self.qi, self.throughput)
         bufferSz = self.whiteboard.get_amount_video_to_play()        
         qiId = 0
         segsize = msg.get_segment_size()
-        if time.time()-self.ini < 0.5:
-            qiId = 0
+        if buferSz >= self.whiteboard.get_max_buffer_size() - 2:
+            self.tabom += 1
         else:
+            self.tabom = 0
+        if time.time()-self.ini >= 0.5:
             for i in range(len(self.qi)):
-                if bufferSz ** (1 + (bufferSz - 10) / 100) > (1 + numpy.log(i+1)) * self.qi[i] / self.qi[0]:
+                if bufferSz ** (1 + 0.1 * tabom) > self.qi[i] / self.qi[0] and self.throughput >= self.qi[i]:
                     qiId = i
                 else:
                     break
+            
 
         msg.add_quality_id(self.qi[qiId])
         self.lastRequest = time.time()
@@ -68,6 +65,8 @@ class R2AShop(IR2A):
         logger.log(f'Package response time: {math.floor(1000 * (time.time() - self.lastRequest))}')
 
     def handle_segment_size_response(self, msg):
+        newThroughput = msg.get_bit_length() / (time.time() - self.lastRequest)
+        self.throughput = self.throughput * 0.5 + newThroughput * 0.5
         self.logPackageArrivalDelta()
         self.throughput = msg.get_bit_length() / (time.time() - self.lastRequest)
         
