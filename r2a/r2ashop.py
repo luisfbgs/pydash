@@ -44,13 +44,13 @@ class R2AShop(IR2A):
         bufferSz = self.whiteboard.get_amount_video_to_play()        
         qiId = 0
         segsize = msg.get_segment_size()
-        if buferSz >= self.whiteboard.get_max_buffer_size() - 2:
+        if bufferSz >= self.whiteboard.get_max_buffer_size() - 2:
             self.tabom += 1
         else:
             self.tabom = 0
         if time.time()-self.ini >= 0.5:
             for i in range(len(self.qi)):
-                if bufferSz ** (1 + 0.1 * tabom) > self.qi[i] / self.qi[0] and self.throughput >= self.qi[i]:
+                if bufferSz ** (1 + 0.1 * self.tabom) > self.qi[i] / self.qi[0] and self.throughput >= self.qi[i]:
                     qiId = i
                 else:
                     break
