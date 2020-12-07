@@ -10,7 +10,7 @@ before sending the message down.
 
 In this algorithm the quality choice is made in a very cool way.
 """
-import time, numpy;
+import time
 from player.parser import *
 from r2a.ir2a import IR2A
 import base.whiteboard as whiteboard
@@ -19,12 +19,11 @@ import math
 
 class R2AShop(IR2A):
 
-    throughput = 0
-    lastRequest = 0
-    tabom = 0
-
     def __init__(self, id):
         IR2A.__init__(self, id)
+        self.lastRequest = 0
+        self.lastBufferSz = 0
+        self.tabom = 0
         self.parsed_mpd = ''
         self.qi = []
         self.whiteboard = whiteboard.Whiteboard.get_instance()
@@ -41,20 +40,30 @@ class R2AShop(IR2A):
 
     def handle_segment_size_request(self, msg):
         # time to define the segment quality choose to make the request
-        bufferSz = self.whiteboard.get_amount_video_to_play()        
-        qiId = 0
-        segsize = msg.get_segment_size()
+        bufferSz = self.whiteboard.get_amount_video_to_play()
+        
+        # se o buffer cair pela metada entre duas chamadas, reduz a qualidade pedida
+        if self.lastBufferSz > 4 and bufferSz <= self.lastBufferSz / 2:
+            if self.tabom > 0:
+                self.tabom = 0
+            self.tabom -= 3
+        self.lastBufferSz = bufferSz
+
+        # se o buffer estiver cheio, aumenta a qualidade pedida
         if bufferSz >= self.whiteboard.get_max_buffer_size() - 2:
-            self.tabom += 1
-        else:
-            self.tabom = 0
+            if bufferSz ** (1 + 0.1 * self.tabom) <= self.qi[-1] / self.qi[0]:
+                self.tabom += 1
+        # se o buffer nao estiver cheio, cancela o aumento anterior aos poucos
+        elif self.tabom > 0:
+            self.tabom -= 1
+
+        qiId = 0
         if time.time()-self.ini >= 0.5:
             for i in range(len(self.qi)):
-                if bufferSz ** (1 + 0.1 * self.tabom) > self.qi[i] / self.qi[0] and self.throughput >= self.qi[i]:
+                if bufferSz ** (1 + 0.1 * self.tabom) > self.qi[i] / self.qi[0]:
                     qiId = i
                 else:
                     break
-            
 
         msg.add_quality_id(self.qi[qiId])
         self.lastRequest = time.time()
@@ -65,11 +74,7 @@ class R2AShop(IR2A):
         logger.log(f'Package response time: {math.floor(1000 * (time.time() - self.lastRequest))}')
 
     def handle_segment_size_response(self, msg):
-        newThroughput = msg.get_bit_length() / (time.time() - self.lastRequest)
-        self.throughput = self.throughput * 0.5 + newThroughput * 0.5
         self.logPackageArrivalDelta()
-        self.throughput = msg.get_bit_length() / (time.time() - self.lastRequest)
-        
         self.send_up(msg)
 
     def initialize(self):
