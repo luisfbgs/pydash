@@ -42,7 +42,7 @@ class R2AShop(IR2A):
         # time to define the segment quality choose to make the request
         bufferSz = self.whiteboard.get_amount_video_to_play()
         segsize = msg.get_segment_size()
-        bufferSz/=segsize
+        bufferSz /= segsize
 
         # se o buffer cair pela metada entre duas chamadas, reduz a qualidade pedida
         if self.lastBufferSz > 4 and bufferSz <= self.lastBufferSz / 2 :
@@ -52,7 +52,7 @@ class R2AShop(IR2A):
         self.lastBufferSz = bufferSz
 
         # se o buffer estiver cheio, aumenta a qualidade pedida
-        if bufferSz >= self.whiteboard.get_max_buffer_size() - 2:
+        if bufferSz >= self.whiteboard.get_max_buffer_size() / segsize - 2:
             if bufferSz ** (1 + 0.1 * self.tabom) <= self.qi[-1] / self.qi[0]:
                 self.tabom += 1
         # se o buffer nao estiver cheio, cancela o aumento anterior aos poucos
